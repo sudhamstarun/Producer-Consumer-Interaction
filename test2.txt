@@ -1,0 +1,266 @@
+System Calls
+
+To facilitate the development of the assignment program, here are the most relevant sections extracted from the document -  The GNU C Library, for your reference. To obtain the full picture of the corresponding section, please follow the URL to the GNU site (http://www.gnu.org/software/libc/manual/html_node/index.html) and search for the corresponding Chapter/Section.
+
+Processes
+
+Processes are organized hierarchically. Each process has a parent process which explicitly arranged to create it. The processes created by a given parent are called its child processes. A child inherits many of its attributes from the parent process. 
+Each process is named by a process ID number. A unique process ID is allocated to each process when it is created. The lifetime of a process ends when its termination is reported to its parent process; at that time, all of the process resources, including its process ID, are freed. Therefore, request the computer to execute a program involves, creating a new child process from an existing process (e.g. the shell process), causing the new process to execute a program, and coordinating the completion of the child process with the original/parent program. 
+Process Creation
+Processes are created with the fork system call (so the operation of creating a new process is sometimes called forking a process). The child process created by fork is a copy of the original parent process, except that it has its own process ID. After forking a child process, both the parent and child processes continue to execute normally. If you want your program to wait for a child process to finish executing before continuing, you must do this explicitly after the fork operation, by calling wait or waitpid.
+A newly forked child process continues to execute the same program as its parent process, at the point where the fork call returns. You can use the return value from fork to tell whether the program is running in the parent process or the child. 
+The fork function is the primitive for creating a process. It is declared in the header file 'unistd.h'. 
+Function: pid_t fork (void) 
+The fork function creates a new process. If the operation is successful, there are then both parent and child processes and both see fork return, but with different values: it returns a value of 0 in the child process and returns the child's process ID in the parent process. If process creation failed, fork returns a value of -1 in the parent process. The following errno error conditions are defined for fork: 
+     EAGAIN 
+There aren't enough system resources to create another process, or the user already has too many processes running. This means exceeding the RLIMIT_NPROC resource limit, which can usually be increased. 
+     ENOMEM 
+The process requires more space than the system can supply. 
+
+The specific attributes of the child process that differ from the parent process are: 
+* The child process has its own unique process ID. 
+* The parent process ID of the child process is the process ID of its parent process. 
+* The child process gets its own copies of the parent process's open file descriptors. Subsequently changing attributes of the file descriptors in the parent process won't affect the file descriptors in the child, and vice versa. However, the file position associated with each descriptor is shared by both processes.
+* The elapsed processor times for the child process are set to zero. 
+* The child doesn't inherit file locks set by the parent process. 
+* The child doesn't inherit alarms set by the parent process. 
+* The set of pending signals for the child process is cleared. (The child process inherits its mask of blocked signals and signal actions from the parent process.) 
+
+Execute Program
+Having several processes run the same program is only occasionally useful, e.g. in parallel computing. But the child can execute another program using one of the exec functions. The program that the process is executing is called its process image. Starting execution of a new program causes the process to forget all about its previous process image. When the new program exits, the process exits too, instead of returning to the previous process image. 
+You can use these function (and others) to make a child process execute a new program after it has been forked. The functions in this family differ in how you specify the arguments, but otherwise they all do the same thing. They are declared in the header file 'unistd.h'. 
+Function: int execv (const char *filename, char *const argv[]) 
+The execv function executes the file named by filename as a new process image. The argv argument is an array of null-terminated strings that is used to provide a value for the argv argument to the main function of the new program to be executed. The last element of this array must be a null pointer. By convention, the first element of this array is the file name of the program sans directory names. The environment for the new process image is taken from the environ variable of the current process image.
+Function: int execl (const char *filename, const char *arg0, ...)
+This is similar to execv, but the argv strings are specified individually instead of as an array. A null pointer must be passed as the last such argument. 
+Function: int execvp (const char *filename, char *const argv[]) 
+The execvp function is similar to execv, except that it searches the directories listed in the PATH environment variable to find the full file name of a file from filename if filename does not contain a slash. This function is useful for executing system utility programs, because it looks for them in the places that the user has chosen. Shells use it to run the commands that users type. 
+Function: int execlp (const char *filename, const char *arg0, ...)
+This function is like execl, except that it performs the same file name searching as the execvp function.
+These functions normally don't return, since execution of a new program causes the currently executing program to go away completely. A value of -1 is returned in the event of a failure. In addition to the usual file name errors, the following errno error conditions are defined for these functions: 
+E2BIG 
+The combined size of the new program's argument list and environment list is larger than ARG_MAX bytes. The GNU system has no specific limit on the argument list size, so this error code cannot result, but you may get ENOMEM instead if the arguments are too big for available memory. 
+ENOEXEC 
+The specified file can't be executed because it isn't in the right format. 
+ENOMEM 
+Executing the specified file requires more storage than is available. 
+Program Termination
+The usual way for a program to terminate is simply for its main function to return. The exit status value returned from the main function is used to report information back to the process's parent process or shell. A program can also terminate normally by calling the exit function. Returning from main is equivalent to calling exit, and the value that main returns is used as the argument to exit. In addition, programs can be terminated by signals.
+Function: void exit (int status) 
+The exit function tells the system that the program is done, which causes it to terminate the process. status is the program's exit status, which becomes part of the process' termination status. This function does not return.
+Normal termination causes the following actions: 
+1. Functions that were registered with the atexit or on_exit functions are called in the reverse order of their registration. This mechanism allows your application to specify its own "cleanup" actions to be performed at program termination. Typically, this is used to do things like saving program state information in a file, or unlocking locks in shared data bases. 
+2. All open streams are closed, writing out any buffered output data. In addition, temporary files opened with the tmpfile function are removed. 
+3. _exit is called, terminating the program. 
+
+When a program exits, it can return to the parent process a small amount of information about the cause of termination, using the exit status. This is a value between 0 and 255 that the exiting process passes as an argument to exit. Normally you should use the exit status to report very broad information about success or failure. You can't provide a lot of detail about the reasons for the failure, and most parent processes would not want much detail anyway. 
+There are conventions for what sorts of status values certain programs should return. The most common convention is simply 0 for success and 1 for failure. A general convention reserves status values 128 and up for special purposes. In particular, the value 128 is used to indicate failure to execute another program in a subprocess. This convention is not universally obeyed, but it is a good idea to follow it in your programs. 
+You can use the macros EXIT_SUCCESS and EXIT_FAILURE for the conventional status value for success and failure, respectively. They are declared in the file 'stdlib.h'. 
+Macro: int EXIT_SUCCESS 
+This macro can be used with the exit function to indicate successful program completion. On POSIX systems, the value of this macro is 0. On other systems, the value might be some other (possibly non-constant) integer expression. 
+Macro: int EXIT_FAILURE 
+This macro can be used with the exit function to indicate unsuccessful program completion in a general sense. On POSIX systems, the value of this macro is 1. On other systems, the value might be some other (possibly non-constant) integer expression.
+Other nonzero status values also indicate failures. Certain programs use different nonzero status values to indicate particular kinds of "non-success". For example, diff uses status value 1 to mean that the files are different, and 2 or more to mean that there was difficulty in opening the files. 
+When a process terminates for any reason--either by an explicit termination call, or termination as a result of a signal--the following things happen: 
+* All open file descriptors in the process are closed. Note that streams are not flushed automatically when the process terminates. 
+* The low-order 8 bits of the return status code are saved to be reported back to the parent process via wait or waitpid.
+* Any child processes of the process being terminated are assigned a new parent process. (On most systems, including GNU, this is the init process, with process ID 1.) 
+* A SIGCHLD signal is sent to the parent process. 
+* If the process is a session leader that has a controlling terminal, then a SIGHUP signal is sent to each process in the foreground job, and the controlling terminal is disassociated from that session. 
+* If termination of a process causes a process group to become orphaned, and any member of that process group is stopped, then a SIGHUP signal and a SIGCONT signal are sent to each process in the group. 
+Process Completion
+The functions described in this section are used to wait for a child process to terminate or stop, and determine its status. These functions are declared in the header file 'sys/wait.h'. 
+Function: pid_t waitpid (pid_t pid, int *status-ptr, int options) 
+The waitpid function is used to request status information from a child process whose process ID is pid. Normally, the calling process is blocked until the child process makes status information available by terminating. Other values for the pid argument have special interpretations. A value of -1 or WAIT_ANY requests status information for any child process; a value of 0 or WAIT_MYPGRP requests information for any child process in the same process group as the calling process; and any other negative value -pgid requests information for any child process whose process group ID is pgid. 
+If status information for a child process is available immediately, this function returns immediately without waiting. If more than one eligible child process has status information available, one of them is chosen randomly, and its status is returned immediately. To get the status from the other eligible child processes, you need to call waitpid again. The options argument is a bit mask. Its value should be the bitwise OR (that is, the '|' operator) of zero or more of the WNOHANG and WUNTRACED flags. You can use the WNOHANG flag to indicate that the parent process shouldn't wait; and the WUNTRACED flag to request status information from stopped processes as well as processes that have terminated. 
+The status information from the child process is stored in the object that status-ptr points to, unless status-ptr is a null pointer. 
+The return value is normally the process ID of the child process whose status is reported. If there are child processes but none of them is waiting to be noticed, waitpid will block until one is. However, if the WNOHANG option was specified, waitpid will return zero instead of blocking. If a specific PID to wait for was given to waitpid, it will ignore all other children (if any). Therefore if there are children waiting to be noticed but the child whose PID was specified is not one of them, waitpid will block or return zero as described above. 
+A value of -1 is returned in case of error. The following errno error conditions are defined for this function: 
+     EINTR 
+The function was interrupted by delivery of a signal to the calling process. 
+     ECHILD 
+There are no child processes to wait for, or the specified pid is not a child of the calling process. 
+     EINVAL 
+An invalid value was provided for the options argument. 
+These symbolic constants are defined as values for the pid argument to the waitpid function. 
+     WAIT_ANY 
+This constant macro (whose value is -1) specifies that waitpid should return status information about any child process. 
+     WAIT_MYPGRP 
+This constant (with value 0) specifies that waitpid should return status information about any child process in the same process group as the calling process. 
+These symbolic constants are defined as flags for the options argument to the waitpid function. You can bitwise-OR the flags together to obtain a value to use as the argument. 
+     WNOHANG 
+This flag specifies that waitpid should return immediately instead of waiting, if there is no child process ready to be noticed. 
+     WUNTRACED 
+This flag specifies that waitpid should report the status of any child processes that have been stopped as well as those that have terminated. 
+Function: pid_t wait (int *status-ptr) 
+This is a simplified version of waitpid, and is used to wait until any one child process terminates. The call: 
+       wait (&status)
+is exactly equivalent to: 
+   waitpid (-1, &status, 0)
+Process Completion Status
+If the exit status value of the child process is zero, then the status value reported by waitpid or wait is also zero. You can test for other kinds of information encoded in the returned status value using the following macros. These macros are defined in the header file 'sys/wait.h'. 
+Macro: int WIFEXITED (int status) 
+This macro returns a nonzero value if the child process terminated normally with exit or _exit. 
+Macro: int WEXITSTATUS (int status) 
+If WIFEXITED is true of status, this macro returns the low-order 8 bits of the exit status value from the child process. 
+Macro: int WIFSIGNALED (int status) 
+This macro returns a nonzero value if the child process terminated because it received a signal that was not handled. 
+Macro: int WTERMSIG (int status) 
+If WIFSIGNALED is true of status, this macro returns the signal number of the signal that terminated the child process. 
+Macro: int WCOREDUMP (int status) 
+This macro returns a nonzero value if the child process terminated and produced a core dump. 
+Macro: int WIFSTOPPED (int status) 
+This macro returns a nonzero value if the child process is stopped. 
+Macro: int WSTOPSIG (int status) 
+If WIFSTOPPED is true of status, this macro returns the signal number of the signal that caused the child process to stop.
+
+
+Signals
+A signal is a “software interrupt” delivered to a process. Usually the operating system uses signals to report exceptional situations to an executing program. To anticipate an event that causes signals, you can define a handler function and tell the operating system to run it when that particular type of signal arrives. One process can send a signal to another process; this allows a parent process to abort a child, or two related processes to communicate and synchronize.
+Examples of the event that can cause (or generate, or raise) a signal: 
+* A program error such as dividing by zero or issuing an address outside the valid range. 
+* A user request to interrupt or terminate the program. Most environments are set up to let a user suspend the program by typing C-z, or terminate it with C-c. Whatever key sequence is used, the operating system sends the proper signal to interrupt the process. 
+* The termination of a child process. 
+* Expiration of a timer or alarm. 
+* A call to kill or raise by the same process. 
+* A call to kill from another process. Signals are a limited but useful form of interprocess communication.
+
+Signals may be generated synchronously or asynchronously. A synchronous signal pertains to a specific action in the program, and is delivered (unless blocked) during that action. Most errors generate signals synchronously, and so do explicit requests by a process to generate a signal for that same process. On some machines, certain kinds of hardware errors (usually floating-point exceptions) are not reported completely synchronously, but may arrive a few instructions later. 
+Asynchronous signals are generated by events outside the control of the process that receives them. These signals arrive at unpredictable times during execution. External events generate signals asynchronously, and so do explicit requests that apply to some other process. 
+When a signal is generated, it becomes pending. Normally it remains pending for just a short period of time and then is delivered to the process that was signaled. However, if that kind of signal is currently blocked, it may remain pending indefinitely--until signals of that kind are unblocked. Once unblocked, it will be delivered immediately.
+When the signal is delivered, whether right away or after a long delay, the specified action for that signal is taken. For certain signals, such as SIGKILL and SIGSTOP, the action is fixed, but for most signals, the program has a choice: ignore the signal, specify a handler function, or accept the default action for that kind of signal. The program specifies its choice using functions such as signal or sigaction.
+If the specified action for a kind of signal is to ignore it, then any such signal which is generated is discarded immediately. This happens even if the signal is also blocked at the time. A signal discarded in this way will never be delivered, not even if the program subsequently specifies a different action for that kind of signal and then unblocks it. 
+If a signal arrives which the program has neither handled nor ignored, its default action takes place. Each kind of signal has its own default action. For most kinds of signals, the default action is to terminate the process. For certain kinds of signals that represent "harmless" events, the default action is to do nothing.  For example, the SIGINT ("program interrupt") signal is sent when the user types the INTR character (normally C-c). 
+The simplest way to change the action for a signal is to use the signal function. You can specify a built-in action (such as to ignore the signal), or you can establish a handler to handle that signal.
+A signal handler is just a function that you compile together with the rest of the program. Instead of directly invoking the function, you use signal or sigaction to tell the operating system to call it when a signal arrives.
+There are two basic strategies you can use in signal handler functions: 
+1. You can have the handler function note that the signal arrived by tweaking some global data structures, and then return normally. 
+2. You can have the handler function terminate the program or transfer control to a point where it can recover from the situation that caused the signal. 
+
+You need to take special care in writing handler functions because they can be called asynchronously. That is, a handler might be called at any point in the program, unpredictably. If two signals arrive during a very short interval, one handler can run within another.
+Signal()
+The signal function provides a simple interface for establishing an action for a particular signal. The function and associated macros are declared in the header file 'signal.h'.
+Data Type: sighandler_t 
+This is the type of signal handler functions. Signal handlers take one integer argument specifying the signal number, and have return type void. So, you should define handler functions like this: 
+   void handler (int signum) { ... }
+The name sighandler_t for this data type is a GNU extension. 
+Function: sighandler_t signal (int signum, sighandler_t action) 
+The signal function establishes action as the action for the signal signum. The first argument, signum, identifies the signal whose behavior you want to control, and should be a signal number. The proper way to specify a signal number is with one of the symbolic signal names, don't use an explicit number, because the numerical code for a given kind of signal may vary from operating system to operating system. 
+The second argument, action, specifies the action to use for the signal signum. This can be one of the following: 
+     SIG_DFL 
+SIG_DFL specifies the default action for the particular signal. 
+     SIG_IGN 
+SIG_IGN specifies that the signal should be ignored. Your program generally should not ignore signals that represent serious events or that are normally used to request termination. You cannot ignore the SIGKILL or SIGSTOP signals at all. You can ignore program error signals like SIGSEGV, but ignoring the error won't enable the program to continue executing meaningfully. Ignoring user requests such as SIGINT, SIGQUIT, and SIGTSTP is unfriendly. When you do not wish signals to be delivered during a certain part of the program, the thing to do is to block them, not ignore them. 
+     handler 
+Supply the address of a handler function in your program, to specify running this handler as the way to deliver the signal. 
+If you set the action for a signal to SIG_IGN, or if you set it to SIG_DFL and the default action is to ignore that signal, then any pending signals of that type are discarded (even if they are blocked). Discarding the pending signals means that they will never be delivered, not even if you subsequently specify another action and unblock this kind of signal. 
+The signal function returns the action that was previously in effect for the specified signum. You can save this value and restore it later by calling signal again. 
+If signal can't honor the request, it returns SIG_ERR instead. The following errno error conditions are defined for this function: 
+     EINVAL 
+You specified an invalid signum; or you tried to ignore or provide a handler for SIGKILL or SIGSTOP. 
+Sigaction()
+The sigaction function has the same basic effect as signal: to specify how a signal should be handled by the process. However, sigaction offers more control, at the expense of more complexity. In particular, sigaction allows you to specify additional flags to control when the signal is generated and how the handler is invoked.
+The sigaction function is declared in signal.h.
+Data Type: struct sigaction
+Structures of type struct sigaction are used in the sigaction function to specify all the information about how to handle a particular signal. This structure contains at least the following members:
+sighandler_t sa_handler
+This is used in the same way as the action argument to the signal function. The value can be SIG_DFL, SIG_IGN, or a function pointer. 
+sigset_t sa_mask
+This specifies a set of signals to be blocked while the handler runs. Note that the signal that was delivered is automatically blocked by default before its handler is started; this is true regardless of the value in sa_mask. If you want that signal not to be blocked within its handler, you must write code in the handler to unblock it, or the SA_NODEFER flag is used.
+int sa_flags
+This specifies various flags which can affect the behavior of the signal. For more information, please read the manpage.
+void (*sa_sigaction)(int, siginfo_t *, void *)
+NOTE: GNU C Library does not include any information on this field.
+If SA_SIGINFO is specified in sa_flags, then sa_sigaction (instead of sa_handler) specifies the signal-handling function for signum. 
+This function receives the signal number as its first argument, a pointer to a siginfo_t as its second argument and a pointer to a ucontext_t (cast to void *) as its third argument (which is usually not being used at all).
+The siginfo_t parameter to sa_sigaction is a struct with the following elements
+siginfo_t {
+    int      si_signo;  /* Signal number */
+    int      si_errno;  /* An errno value */
+    int      si_code;   /* Signal code */
+    pid_t    si_pid;    /* Sending process ID */
+    uid_t    si_uid;    /* Real user ID of sending process */
+    int      si_status; /* Exit value or signal */
+    clock_t  si_utime;  /* User time consumed */
+    clock_t  si_stime;  /* System time consumed */
+    sigval_t si_value;  /* Signal value */
+    int      si_int;    /* POSIX.1b signal */
+    void *   si_ptr;    /* POSIX.1b signal */
+    void *   si_addr;   /* Memory location which caused fault */
+    int      si_band;   /* Band event */
+    int      si_fd;     /* File descriptor */
+}
+si_signo, si_errno and si_code are defined for all signals. (si_signo is unused on Linux.) The rest of the struct may be a union, so that one should only read the fields that are meaningful for the given signal. POSIX.1b signals and SIGCHLD fill in si_pid and si_uid. SIGCHLD also fills in si_status, si_utime and si_stime. si_int and si_ptr are specified by the sender of the POSIX.1b signal. SIGILL, SIGFPE, SIGSEGV, and SIGBUS fill in si_addr with the address of the fault. 
+Function: int sigaction (int signum, const struct sigaction *restrict action, struct sigaction *restrict old-action)
+The action argument is used to set up a new action for the signal signum, while the old-action argument is used to return information about the action previously associated with this symbol. (In other words, old-action has the same purpose as the signal function's return value—you can check to see what the old action in effect for the signal was, and restore it later if you want.)
+Either action or old-action can be a null pointer. If old-action is a null pointer, this simply suppresses the return of information about the old action. If action is a null pointer, the action associated with the signal signum is unchanged; this allows you to inquire about how a signal is being handled without changing that handling.
+The return value from sigaction is zero if it succeeds, and -1 on failure. The following errno error conditions are defined for this function:
+EINVAL
+The signum argument is not valid, or you are trying to trap or ignore SIGKILL or SIGSTOP.
+Pipe
+A pipe is a mechanism for interprocess communication. Data written to the pipe by one process can be read by another process. The data is handled in a first-in, first-out (FIFO) order.
+The primitive for creating a pipe is the pipe function. This creates both the reading and writing ends of the pipe. It is not very useful for a single process to use a pipe to talk to itself. In typical use, a process creates a pipe just before it forks one or more child processes. The pipe is then used for communication either between the parent or child processes, or between two sibling processes. 
+
+
+Function: int pipe (int filedes[2])
+The pipe function creates a pipe and puts the file descriptors for the reading and writing ends of the pipe (respectively) into filedes[0] and filedes[1]. 
+By convention, the first descriptor is normally used as the read end of the pipe, and the second is normally the write end, so that data written to filedes[1] appears on (i.e., can be read from) filedes[0].  This allows the output of one program to be sent to another program.
+If successful, pipe returns a value of 0. On failure, -1 is returned.
+Duplicating File Descriptors
+You can duplicate a file descriptor, or allocate another file descriptor that refers to the same open file as the original. Duplicate descriptors share one file position and one set of file status flags, but each has its own set of file descriptor flags. 
+The major use of duplicating a file descriptor is to implement redirection of input or output: that is, to change the file or pipe that a particular file descriptor corresponds to.
+Function: int dup2 (int old, int new)
+This function copies the descriptor old to descriptor number new.
+If old is an invalid descriptor, then dup2 does nothing; it does not close new. Otherwise, the new duplicate of old replaces any previous meaning of descriptor new, as if new were closed first.
+Resource Usage
+The getrusage() function provides measures of the  resources used  by  the current process, or its terminated and waited-for child processes. The returned resource usages information is stored in an object of type struct rusage, and a pointer of this object type must be passed as an argument to the getrusage() function. They are declared in sys/resource.h.
+Function: int getrusage (int who, struct rusage *rusage)
+This function reports resource usage totals for processes specified by who, storing the information in *rusage. 
+In most systems, who has only two valid values:
+RUSAGE_SELF - Just the current process.
+RUSAGE_CHILDREN - All child processes (direct and indirect) that have already terminated. 
+The return value of getrusage is zero for success, and -1 for failure.
+The struct rusage data type stores various resource usage statistics. It has the following members, and possibly others:
+struct rusage {
+    struct timeval ru_utime; /* user time used */  (available in Linux)
+    struct timeval ru_stime; /* system time used */ (available in Linux)
+    long   ru_maxrss;        /* maximum resident set size */
+    long   ru_ixrss;         /* integral shared memory size */
+    long   ru_idrss;         /* integral unshared data size */
+    long   ru_isrss;         /* integral unshared stack size */
+    long   ru_minflt;        /* page reclaims */ (available in Linux)
+    long   ru_majflt;        /* page faults */  (available in Linux)
+    long   ru_nswap;         /* swaps */
+    long   ru_inblock;       /* block input operations */  (available in Linux)
+    long   ru_oublock;       /* block output operations */  (available in Linux)
+    long   ru_msgsnd;        /* messages sent */
+    long   ru_msgrcv;        /* messages received */
+    long   ru_nsignals;      /* signals received */
+    long   ru_nvcsw;         /* voluntary context switches */  (available in Linux)
+    long   ru_nivcsw;        /* involuntary context switches */  (available in Linux)
+};
+Real Time
+In scalar context gettimeofday returns the number of seconds since the midnight (0 hour), January 1, 1970 UTC (Coordinated Universal Time, formerly known as Greenwich Mean Time, GMT). 
+Function: int gettimeofday (struct timeval *tp, struct timezone *tzp) 
+The gettimeofday function returns the current date and time in the struct timeval structure indicated by tp. Information about the time zone is returned in the structure pointed at tzp. If the tzp argument is a null pointer, time zone information is ignored. 
+The return value is 0 on success and -1 on failure. The following errno error condition is defined for this function: 
+     ENOSYS 
+The operating system does not support getting time zone information, and tzp is not a null pointer. The GNU operating system does not support using struct timezone to represent time zone information; that is an obsolete feature of 4.3 BSD.
+The use of the timezone struct is obsolete; the tz_dsttime field has never been used under Linux - it  has  not  been and  will  not  be  supported  by libc or glibc.  Each and every occurrence of this field in the kernel source (other than  the  declaration)  is  a bug. Thus, the following is purely of historic interest.
+Program Arguments
+Each process has its own address space and (usually) one thread of control. A process executes a program; you can have multiple processes executing the same program, but each process has its own copy of the program within its own address space and executes it independently of the other copies. 
+In ISO C you can define main either to take no arguments, or to take two arguments that represent the command line arguments to the program, like this: 
+int main (int argc, char *argv[])
+The command line arguments are the whitespace-separated tokens given in the shell command used to invoke the program; thus, in 'cat foo bar', the arguments are 'foo' and 'bar'. The only way a program can look at its command line arguments is via the arguments of main. If main doesn't take arguments, then you cannot get at the command line. 
+The value of the argc argument is the number of command line arguments. The argv argument is a vector of C strings; its elements are the individual command line argument strings. The file name of the program being run is also included in the vector as the first element; the value of argc counts this element. A null pointer always follows the last element: argv[argc] is this null pointer. For the command 'cat foo bar', argc is 3 and argv has three elements, "cat", "foo" and "bar". 
+Environment Variables
+When a program is executed, it receives information about the context in which it was invoked in two ways. The first mechanism uses the argv and argc arguments to its main function, and is discussed in the above section. The second mechanism uses environment variables.
+The argv mechanism is typically used to pass command-line arguments specific to the particular program being invoked. The environment, on the other hand, keeps track of information that is shared by many programs, changes infrequently, and that is less frequently used. 
+The environment variables discussed in this section are the same environment variables that you use the set and export commands of the shell. Programs executed from the shell inherit all of the environment variables from the shell.  The value of an environment variable can be accessed with the getenv function within your program. This is declared in the header file 'stdlib.h'.
+Function: char * getenv (const char *name) 
+This function returns a string that is the value of the environment variable name. You must not modify this string. In some non-Unix systems not using the GNU library, it might be overwritten by subsequent calls to getenv (but not by any other library function). If the environment variable name is not defined, the value is a null pointer. 
+Environment variable - PATH 
+A path is a sequence of directory names which is used for searching for a file. The variable PATH holds a path used for searching for programs to be run. The syntax of a path is a sequence of directory names separated by colons. An empty string instead of a directory name stands for the current working directory. A typical value for this environment variable might be a string like: 
+     :/bin:/etc:/usr/bin:/usr/new/X11:/usr/new:/usr/local/bin
+This means that if the user tries to execute a program named foo, the system will look for files named 'foo', '/bin/foo', '/etc/foo', and so on. The first of these files that exists is the one that is executed.
+

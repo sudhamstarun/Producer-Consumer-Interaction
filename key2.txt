@@ -1,0 +1,9 @@
+7
+process
+fork
+parent
+rich
+Function
+strings
+signal
+
