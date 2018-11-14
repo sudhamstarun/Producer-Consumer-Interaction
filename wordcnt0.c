@@ -26,6 +26,7 @@ char * target; 	//store the filename of keyword file
 
 //pre: input is a C string to be converted to lower case
 //post: return the input C string after converting all the characters to lower case
+// Can use this ensure that my code is case insensitive 
 char * lower(char * input){
 	unsigned int i;	
 	for (i = 0; i < strlen(input); ++i)
