@@ -49,11 +49,8 @@ typedef struct printResults //rddata
 
 char * convertToLowerCase(char * input);
 unsigned int keyWordSearch(char * keyword);
-
-
-
-
-
+bool checkIfSharedBufferEmpty();
+void * workerThreadExecution(void * arg);
 /*
 *** END OF LIST OF FUNCTIONS BEING USED IN THE PROGRAM*** 
 */
