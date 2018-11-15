@@ -19,17 +19,17 @@ To have better control on the output, we would like to ask all worker threads no
 
 ## How to run it ?
 
-First, compile the c file with the following command 
+First, compile the c file with the following command: 
 
 ```bash
 gcc thrwordcnt.c -o thrwordcnt
 ```
-
+Then run the executable with the following arguments:
 ```bash
 ./thrwordcnt [number of workers] [number of buffers] [target plaintext file] [keyword file]
 ```
 
-*Number of Workers* -> Number of child threads we want to engage
-*Number of Buffers* -> Size of the Task Pool
-*Target Plain Text File* -> The file you want to count the word frequency in 
-*Keyword File* -> The file in which the words you want to search are stored
+*Number of Workers* -> Number of child threads we want to engage <br>
+*Number of Buffers* -> Size of the Task Pool <br>
+*Target Plain Text File* -> The file you want to count the word frequency in <br>
+*Keyword File* -> The file in which the words you want to search are stored <br>
