@@ -171,6 +171,41 @@ unsigned int keyWordSearch(char *keyword)
     return count;
 }
 
+void * workerThreadExecution(void *arg)
+{
+    int randomIntegerOne; // for 
+    char charArrayForCheck[MAXIMUM_SIZE]; 
+    int tasksCompletedCounter = 0; // total number of tasks completed the thread has completed
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+
+    while(1)
+    {
+        printf("Worker(%d) : Start up. Wait for task!\n");
+        pthread_mutex_lock(&sharedBufferLock);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
+
 int main(int argc, char* argv[])
 {
 
