@@ -43,24 +43,46 @@ typedef struct printResults //rddata
 *** END OF DECLARING DATA STRUCTURES REQUIRED FOR OUR PROGRAM *** 
 */
 
-
 /*
 *** START OF LIST OF FUNCTIONS BEING USED IN THE PROGRAM*** 
 */
+
+char * convertToLowerCase*(char * input);
+unsigned int keyWordSearch(char * keyword);
+
+
+
 
 
 /*
 *** END OF LIST OF FUNCTIONS BEING USED IN THE PROGRAM*** 
 */
 
+
 /*
 *** START OF LIST OF GLOBAL VARIABLES BEING USED IN THE PROGRAM*** 
+*** This includes mutex locks and the condition variables as well ***
 */
 
-int numberOfWorkerThreads;  // will store the number of worker threads received from the command line
-int bufferSize; //size of the task pool received from the command line
-int flagForWokerThreadsDone; //flag to indicate if the worker threads are done with their jobs
+char *filename; // store the name of the keyword file
+char ** sharedBuffer;
+struct printResults  * pointerIntermediatry;
+struct printResults * pointerforResults;
+bool flagForTermination;
+int resultCounter = 0;
+int lineCounter;
+char temporaryKeyWordStorage[MAXIMUM_SIZE];
+int bufferCounter = 0;
+int wordCounter = 0;
+int sharedBufferSize;
+int workerThreads;
 
+//Condition variables and mutex locks declared below
+pthread_mutex_t sharedBufferLock;
+pthread_mutex_t resultsPoolLock;
+pthread_cond_t sharedBufferNotFull;
+pthread_cond_t sharedBufferNotEmpty;
+pthread_t *pointerToThreads;
 /*
 *** END OF LIST OF GLOBAL VARIABLES BEING USED IN THE PROGRAM*** 
 */
