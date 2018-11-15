@@ -47,7 +47,7 @@ typedef struct printResults //rddata
 *** START OF LIST OF FUNCTIONS BEING USED IN THE PROGRAM*** 
 */
 
-char * convertToLowerCase*(char * input);
+char * convertToLowerCase(char * input);
 unsigned int keyWordSearch(char * keyword);
 
 
