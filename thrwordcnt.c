@@ -20,49 +20,24 @@ Number of Buffers or Pool Size will remain the same as from the input argument
 #include <string.h>
 #include <pthread.h>
 #include <ctype.h>
+#include <stdbool.h>
 #include <assert.h>
+#include <time.h>
+#include <unistd.h>
+#include <errno.h>
 
-#define INC_BUFF_SIZE 20 // think what to do with this one
+#define MAXIMUM_SIZE 200
+
 
 /*
 *** DECLARING DATA STRUCTURES REQUIRED FOR OUR PROGRAM *** 
 */
 
-typedef struct readDataFromFile  //rddata
+typedef struct printResults //rddata
 {
-    long start; // indicating start of the file
-    long end; //indicating end of the file
-    char *fileName; //name of the file 
-    struct pairBuffer *pointerToPairBuffer; // pointer to the pair buffer
-} readDataFromFile;
-
-typedef struct wordBuffer //varbuf
-{
-    int size; // size of the word buffer
-    int count;  // number of words in the buffer
-    struct pairDirectory *pointerToDirectory; // directory of pairs       
-} wordBuffer;
-
-typedef struct pairBuffer //buffer
-{
-    int count; // number of entries in the pairBuffer
-    int maxSize; // the maximum size of the pairBuffer
-    struct wordPair *pointerToDirectory;
-    pthread mutex_t mutex;
-} pairBuffer;
-
-typedef struct wordPair //pair
-{
-    char wordName[16];
-    int count;
-} wordPair;
-
-typedef struct sharedBuffer
-{
-    struct pairBuffer *buffer1;
-    struct wordBuffer *buffer2;
-} sharedBuffer;
-
+    unsigned int counter; // counter of the keyword
+    char currentWord[MAXIMUM_SIZE]; // storing the keyword in concern
+} printResults;
 
 /*
 *** END OF DECLARING DATA STRUCTURES REQUIRED FOR OUR PROGRAM *** 
@@ -78,26 +53,51 @@ typedef struct sharedBuffer
 *** END OF LIST OF FUNCTIONS BEING USED IN THE PROGRAM*** 
 */
 
+/*
+*** START OF LIST OF GLOBAL VARIABLES BEING USED IN THE PROGRAM*** 
+*/
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+int numberOfWorkerThreads;  // will store the number of worker threads received from the command line
+int bufferSize; //size of the task pool received from the command line
+int flagForWokerThreadsDone; //flag to indicate if the worker threads are done with their jobs
 
 /*
- *** INITIALIZING GLOBAL VARIABLES REQUIRED TO RUN THE PROGRAM ***
- */
+*** END OF LIST OF GLOBAL VARIABLES BEING USED IN THE PROGRAM*** 
+*/
 
-int 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
