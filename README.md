@@ -7,9 +7,9 @@ We are going to structure our solution in the form of producer/consumer interact
 
 We are going to implement the control logic of the multithreaded program in the form of bounded- buffer interaction and use semaphores or (mutex locks and condition variables) to synchronize and coordinate between multiple threads.
 
-##Workflow
+## Workflow
 
-To apply the bounded-buffer model to this application, we use the master thread to work as a producer and all worker threads act as the consumers. Unlike step 2, the multithreaded program only creates a fixed number (T) of worker threads regardless of the number of keywords. Producer communicates with all workers (consumers) via a task pool (the bounded-buffer), which is implemented as an array of C strings in this application. The array has N entries; each is for storing a keyword. The parameters T and N are runtime parameters obtained from the command line arguments. We will assume the number of worker threads is between 1 and 15 and the size of the bounded-buffer is between 1 to 10.
+To apply the bounded-buffer model to this application, we use the master thread to work as a producer and all worker threads act as the consumers. The multithreaded program only creates a fixed number (T) of worker threads regardless of the number of keywords. Producer communicates with all workers (consumers) via a task pool (the bounded-buffer), which is implemented as an array of C strings in this application. The array has N entries; each is for storing a keyword. The parameters T and N are runtime parameters obtained from the command line arguments. We will assume the number of worker threads is between 1 and 15 and the size of the bounded-buffer is between 1 to 10.
 
 The master thread (producer) reads in keywords from the keyword file and places them one by one to the task pool. If the task pool becomes full, i.e., no empty entries, the producer should be blocked waiting for empty entries in the task pool. This process would continue until all the keywords have been placed to the task pool.
 
@@ -19,6 +19,17 @@ To have better control on the output, we would like to ask all worker threads no
 
 ## How to run it ?
 
+First, compile the c file with the following command 
+
+```bash
+gcc thrwordcnt.c -o thrwordcnt
+```
+
 ```bash
 ./thrwordcnt [number of workers] [number of buffers] [target plaintext file] [keyword file]
 ```
+
+*Number of Workers* -> Number of child threads we want to engage
+*Number of Buffers* -> Size of the Task Pool
+*Target Plain Text File* -> The file you want to count the word frequency in 
+*Keyword File* -> The file in which the words you want to search are stored
