@@ -8,25 +8,102 @@ Execution: ./thrwordcnt [number of workers] [number of buffers] [target plaintex
 Remarks: 
 */
 
+/*
+REDUCERS THREADS- Number of worker threads
+MAPPER THREADS - Will always be 1 in our case as we do not need multiple mapper threads (Need to figure a way to always keep the mapper threads to 1 or see if it is different?)
+This means that Mapper Pool will be of the same size as the reducer pool
+Number of Buffers or Pool Size will remain the same as from the input argument
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
-#include <unistd.h>
+#include <ctype.h>
 #include <assert.h>
 
-typedef node // creating a singly-linked list in order to store all the target keywords and navigate through them
-{
-    char *keyword;
-    struct node *nextKeyWord;
-} Node;
+/*
+*** DECLARING DATA STRUCTURES REQUIRED FOR OUR PROGRAM *** 
+*/
 
-typedef
+typedef struct readDataFromFile 
 {
-    
+    long start; // indicating start of the file
+    long end; //indicating end of the file
+    char *fileName; //name of the file 
+    struct pairBuffer *pointerToPairBuffer; // pointer to the pair buffer
+} readDataFromFile;
+
+typedef struct wordBuffer
+{
+    int size; // size of the word buffer
+    int count;  // number of words in the buffer
+    struct pairDirectory *pointerToDirectory; // directory of pairs       
 }
+
+typedef struct pairBuffer
+{
+    int count; // number of entries in the pairBuffer
+    int maxSize; // the maximum size of the pairBuffer
+    struct wordPair *pointerToDirectory;
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*
  *** INITIALIZING GLOBAL VARIABLES REQUIRED TO RUN THE PROGRAM ***
  */
 
+int 
+
+
+
+int main(int argc, char* argv[])
+{
+
+    /*
+    *** START OF HANDLING COMMANDLINE ARGUMENT ERRORS
+    */
+
+    if(argc != 4)
+    {
+        fprintf(stderr, "Usage: ./thrwordcnt [number of workers] [number of buffers] [target plaintext file] [keyword file]\nz");
+        exit(EXIT_FAILURE);
+    }
+
+    if(atoi(argv[1] < 1 || aoti(argv[1] > 15)))
+    {
+        fprintf(stderr, "The number of worker threads must be between 1 to 15\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if(atoi(argv[2] < 1 || argv[2] > 10))
+    {
+        fprintf(stderr, "The number of buffers in task pool must be between 1 to 10");
+        exit(EXIT_FAILURE);
+    }
+
+    /*
+    END OF HANDLING COMMANDLINE ARGUMENT ERRORS ***
+    */
+
+
+}
