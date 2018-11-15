@@ -30,7 +30,7 @@ Number of Buffers or Pool Size will remain the same as from the input argument
 
 
 /*
-*** DECLARING DATA STRUCTURES REQUIRED FOR OUR PROGRAM *** 
+***DECLARING DATA STRUCTURES REQUIRED FOR OUR PROGRAM *** 
 */
 
 typedef struct printResults //rddata
@@ -40,24 +40,24 @@ typedef struct printResults //rddata
 } printResults;
 
 /*
-*** END OF DECLARING DATA STRUCTURES REQUIRED FOR OUR PROGRAM *** 
+************************************************************
 */
 
 /*
-*** START OF LIST OF FUNCTIONS BEING USED IN THE PROGRAM*** 
+***LIST OF FUNCTIONS BEING USED IN THE PROGRAM*** 
 */
 
+bool checkIfSharedBufferEmpty();
 char * convertToLowerCase(char * input);
 unsigned int keyWordSearch(char * keyword);
-bool checkIfSharedBufferEmpty();
 void * workerThreadExecution(void * arg);
+
 /*
-*** END OF LIST OF FUNCTIONS BEING USED IN THE PROGRAM*** 
+************************************************************
 */
 
-
 /*
-*** START OF LIST OF GLOBAL VARIABLES BEING USED IN THE PROGRAM*** 
+***LIST OF GLOBAL VARIABLES BEING USED IN THE PROGRAM*** 
 *** This includes mutex locks and the condition variables as well ***
 */
 
@@ -80,45 +80,96 @@ pthread_mutex_t resultsPoolLock;
 pthread_cond_t sharedBufferNotFull;
 pthread_cond_t sharedBufferNotEmpty;
 pthread_t *pointerToThreads;
+
 /*
-*** END OF LIST OF GLOBAL VARIABLES BEING USED IN THE PROGRAM*** 
+************************************************************
 */
 
+/*
+    ***DEFINING THE FUNCTIONS REQUIRED TO RUN THE PROGRAM***
+*/
 
+bool checkIfSharedBufferEmpty()
+{
+    int randomIntegerOne;
 
+    for(randomIntegerOne = 0; randomIntegerOne < sharedBufferSize; randomIntegerOne++)
+    {
+        if(sharedBuffer[randomIntegerOne] != NULL)
+        {
+            return false;
+        }
+    }
 
+    return true;
+}
 
+// ADAPTED FROM wordcnt.c file provided with the assignment question
+//pre: input is a C string to be converted to lower case
+//post: return the input C string after converting all the characters to lower case
+char * convertToLowerCase(char * input)
+{
+    unsigned int randomIntegerOne;
 
+    for(randomIntegerOne = 0; randomIntegerOne < strlen(input); randomIntegerOne++)
+    {
+        input[randomIntegerOne] = tolower(input[randomIntegerOne]);
+    }
 
+    return input;
+}
 
+// ADAPTED FROM wordcnt.c file provided with the assignment question
+//pre: the keyword to search for
+//post: the frequency of occurrence of the keyword in the file
+unsigned int keyWordSearch(char *keyword)
+{
+    int counter = 0;
+    FILE *f;
+    char * pos;
+    char input[MAXIMUM_SIZE];
+    char * word = strdup(keyword); // clone the keyword
 
+    convertToLowerCase(word); // convert the word to lowercase
+    f = fopen(filename, "r"); // open the file stream
 
+    while(fscanf(f, "%s", input) != EOF) //if not EOF
+    {
+        convertToLowerCase(input); // change the input to lower case
+        if(strcmp(input, word) == 0) // perfect match
+        {
+            counter++;
+        }
 
+        else
+        {
+            pos = strstr(input, word); // search for substring 
+            if(pos != NULL)//keyword is a substring of this string 
+            { // if the charactter before keyword in this input string 
+                //is an alphabet, skip the checking 
+                if((pos - input > 0) && (isalpha(*(pos-1))))
+                {
+                    continue;
+                }
+                //if the character after keyword in this input string
+				//is an alphabet, skip the checking
+                if(((pos - input+strlen(word) < strlen(input))) && (isalpha(*(pos+strlen(word)))))
+                {
+                    continue;
+                }
+                //Well, we count this keyword as the characters before 
+				//and after the keyword in this input string are non-alphabets
+                counter++;
+            }
 
+        }
+    }
 
+    fclose(f);
+    free(word);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    return count;
+}
 
 int main(int argc, char* argv[])
 {
