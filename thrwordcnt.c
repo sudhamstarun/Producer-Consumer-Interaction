@@ -22,11 +22,13 @@ Number of Buffers or Pool Size will remain the same as from the input argument
 #include <ctype.h>
 #include <assert.h>
 
+#define INC_BUFF_SIZE 20 // think what to do with this one
+
 /*
 *** DECLARING DATA STRUCTURES REQUIRED FOR OUR PROGRAM *** 
 */
 
-typedef struct readDataFromFile 
+typedef struct readDataFromFile  //rddata
 {
     long start; // indicating start of the file
     long end; //indicating end of the file
@@ -34,24 +36,47 @@ typedef struct readDataFromFile
     struct pairBuffer *pointerToPairBuffer; // pointer to the pair buffer
 } readDataFromFile;
 
-typedef struct wordBuffer
+typedef struct wordBuffer //varbuf
 {
     int size; // size of the word buffer
     int count;  // number of words in the buffer
     struct pairDirectory *pointerToDirectory; // directory of pairs       
-}
+} wordBuffer;
 
-typedef struct pairBuffer
+typedef struct pairBuffer //buffer
 {
     int count; // number of entries in the pairBuffer
     int maxSize; // the maximum size of the pairBuffer
     struct wordPair *pointerToDirectory;
+    pthread mutex_t mutex;
+} pairBuffer;
 
-}
+typedef struct wordPair //pair
+{
+    char wordName[16];
+    int count;
+} wordPair;
+
+typedef struct sharedBuffer
+{
+    struct pairBuffer *buffer1;
+    struct wordBuffer *buffer2;
+} sharedBuffer;
 
 
+/*
+*** END OF DECLARING DATA STRUCTURES REQUIRED FOR OUR PROGRAM *** 
+*/
 
 
+/*
+*** START OF LIST OF FUNCTIONS BEING USED IN THE PROGRAM*** 
+*/
+
+
+/*
+*** END OF LIST OF FUNCTIONS BEING USED IN THE PROGRAM*** 
+*/
 
 
 
