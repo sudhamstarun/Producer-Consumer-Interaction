@@ -180,7 +180,7 @@ void * workerThreadExecution(void *arg)
 
     while(1)
     {
-        printf("Worker(%d) : Start up. Wait for task!\n");
+        printf("Worker(%d) : Start up. Wait for task!\n", (int) arg);
         pthread_mutex_lock(&sharedBufferLock);
 
         while(bufferCounter == 0)
@@ -208,7 +208,7 @@ void * workerThreadExecution(void *arg)
         tasksCompletedCounter++;
     }
 
-    pthread_exit((void*) tasksCompletedCounter);
+    pthread_exit((void*) (uintptr_t)tasksCompletedCounter);
 }
 
 int main(int argc, char* argv[])
