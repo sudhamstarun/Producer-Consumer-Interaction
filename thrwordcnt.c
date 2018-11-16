@@ -173,7 +173,6 @@ unsigned int keyWordSearch(char *keyword)
 
 void * workerThreadExecution(void *arg)
 {
-    int randomIntegerOne; // for 
     char charArrayForCheck[MAXIMUM_SIZE]; 
     int tasksCompletedCounter = 0; // total number of tasks completed the thread has completed
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
@@ -183,7 +182,34 @@ void * workerThreadExecution(void *arg)
     {
         printf("Worker(%d) : Start up. Wait for task!\n");
         pthread_mutex_lock(&sharedBufferLock);
+
+        while(bufferCounter == 0)
+        {
+            pthread_cond_wait(&sharedBufferNotEmpty,&sharedBufferLock);
+        }
+
+        bufferCounter = bufferCounter - 1;
+        strcpy(temporaryKeyWordStorage, sharedBuffer[bufferCounter])
+
+        if(strcmp(temporaryKeyWordStorage, "__XX__") == 0)
+        {
+            pthread_cond_signal(&sharedBufferNotFull);
+            pthread_mutex_unlock(&sharedBufferLock);
+            break;
+        }
+
+        sharedBuffer[bufferCounter] = NULL;
+        printf("Worker(%d) : Search for keyword '%s'"\n, (int)arg, temporaryKeyWordStorage);
+        pointerforResults[resultCounter].counter = keyWordSearch(temporaryKeyWordStorage);
+        strcpy(pointerforResults[resultCounter].keyword, temporaryKeyWordStorage);
+        resultCounter++;
+        pthread_cond_signal(&sharedBufferNotFull);
+        pthread_mutex_lock(&sharedBufferLock);
+        tasksCompletedCounter++;
     }
+
+    pthread_exit((void*) tasksCompletedCounter);
+}
 
 
 
