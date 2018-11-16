@@ -168,7 +168,7 @@ unsigned int keyWordSearch(char *keyword)
     fclose(f);
     free(word);
 
-    return count;
+    return counter;
 }
 
 void * workerThreadExecution(void *arg)
@@ -189,7 +189,7 @@ void * workerThreadExecution(void *arg)
         }
 
         bufferCounter = bufferCounter - 1;
-        strcpy(temporaryKeyWordStorage, sharedBuffer[bufferCounter])
+        strcpy(temporaryKeyWordStorage, sharedBuffer[bufferCounter]);
 
         if(strcmp(temporaryKeyWordStorage, "__XX__") == 0)
         {
@@ -199,9 +199,9 @@ void * workerThreadExecution(void *arg)
         }
 
         sharedBuffer[bufferCounter] = NULL;
-        printf("Worker(%d) : Search for keyword '%s'"\n, (int)arg, temporaryKeyWordStorage);
+        printf("Worker(%d) : Search for keyword '%s'\n", (int)arg, temporaryKeyWordStorage);
         pointerforResults[resultCounter].counter = keyWordSearch(temporaryKeyWordStorage);
-        strcpy(pointerforResults[resultCounter].keyword, temporaryKeyWordStorage);
+        strcpy(pointerforResults[resultCounter].currentWord, temporaryKeyWordStorage);
         resultCounter++;
         pthread_cond_signal(&sharedBufferNotFull);
         pthread_mutex_lock(&sharedBufferLock);
@@ -209,27 +209,6 @@ void * workerThreadExecution(void *arg)
     }
 
     pthread_exit((void*) tasksCompletedCounter);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
 
 int main(int argc, char* argv[])
@@ -245,13 +224,13 @@ int main(int argc, char* argv[])
         exit(EXIT_FAILURE);
     }
 
-    if(atoi(argv[1] < 1 || aoti(argv[1] > 15)))
+    if(atoi(argv[1]) < 1 || atoi(argv[1]) > 15)
     {
         fprintf(stderr, "The number of worker threads must be between 1 to 15\n");
         exit(EXIT_FAILURE);
     }
 
-    if(atoi(argv[2] < 1 || argv[2] > 10))
+    if(atoi(argv[2]) < 1 || atoi(argv[2]) > 10)
     {
         fprintf(stderr, "The number of buffers in task pool must be between 1 to 10");
         exit(EXIT_FAILURE);
