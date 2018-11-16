@@ -213,12 +213,34 @@ void * workerThreadExecution(void *arg)
 
 int main(int argc, char* argv[])
 {
-
     /*
-    *** START OF HANDLING COMMANDLINE ARGUMENT ERRORS
+    *** DECLARING VARIABLES REQUIRED IN INT MAIN AND INITLIZATION OF CONDITION VARIABLES
+        AND MUTEX LOCKS***
     */
 
-    if(argc != 4)
+    FILE *fp;
+    int randomIntegerOne;
+    int randomIntegerTwo; //pt
+    int randomIntegerNum;
+    char storeWord[MAXIMUM_SIZE];
+    char temporaryKeyWord[MAXIMUM_SIZE];
+    struct printResults * finalResults;
+    flagForTermination = false;
+
+    pthread_mutex_init(&sharedBufferLock, NULL);
+    pthread_mutex_init(&resultsPoolLock, NULL);
+    pthread_cond_init(&sharedBufferNotEmpty, NULL);
+    pthread_cond_init(&sharedBufferNotFull, NULL);
+
+    /*
+    ************************************************************
+    */
+
+    /*
+    *** START OF HANDLING COMMANDLINE ARGUMENT ERRORS ***
+    */
+
+    if(argc != 5)
     {
         fprintf(stderr, "Usage: ./thrwordcnt [number of workers] [number of buffers] [target plaintext file] [keyword file]\nz");
         exit(EXIT_FAILURE);
@@ -237,8 +259,106 @@ int main(int argc, char* argv[])
     }
 
     /*
-    END OF HANDLING COMMANDLINE ARGUMENT ERRORS ***
+    ************************************************************
     */
 
 
+    /*
+    *** MAIN LOGIC STARTS HERE ***
+    */
+       
+    fp = fopen(argv[4], "r");
+    fscanf(fp, "%d", &lineCounter);
+    int randomArray[lineCounter];
+    pointerforResults = (struct printResults *) malloc (lineCounter * sizeof(struct printResults)); // array to maintain the final results
+    sharedBuffer = malloc(lineCounter * sizeof(char*));
+
+    // initialize the sharedBuffer array
+    for(randomIntegerOne = 0; randomIntegerOne < sharedBufferSize; randomIntegerOne++)
+    {
+        sharedBuffer[randomIntegerOne] = malloc((MAXIMUM_SIZE) * sizeof(char *));
+    }
+
+    //setting all the values in sharedBuffer to NULL
+    for(randomIntegerOne = 0; randomIntegerOne < sharedBufferSize; randomIntegerOne++)
+    {
+        sharedBuffer[randomIntegerOne] = NULL;
+    }
+
+    //initialize thread array
+    pointerToThreads = malloc((MAXIMUM_SIZE)*sizeof(char*));
+
+    for(randomIntegerOne = 0; randomIntegerOne < sharedBufferSize; randomIntegerOne++)
+    {
+        pthread_create(&pointerToThreads[randomIntegerOne], NULL, workerThreadExecution, (void*) (uintptr_t) randomIntegerOne);
+    }
+
+    while(wordCounter < lineCounter)
+    {
+        fscanf(fp, "%s", temporaryKeyWord);
+        pthread_mutex_lock(&sharedBufferLock);
+
+        while(bufferCounter == sharedBufferSize)
+        {
+            pthread_cond_wait(&sharedBufferNotFull, &sharedBufferLock);
+        }
+
+        sharedBuffer[bufferCounter] = strdup(temporaryKeyWord);
+        wordCounter++;
+        bufferCounter++;
+        pthread_cond_signal(&sharedBufferNotEmpty);
+        pthread_mutex_unlock(&sharedBufferLock);
+    }
+
+    while(1)
+    {
+        if(checkIfSharedBufferEmpty() == true)
+        {
+            for(randomIntegerOne = 0; randomIntegerOne < workerThreads; randomIntegerOne++)
+            {
+                pthread_mutex_lock(&sharedBufferLock);
+
+                while(bufferCounter == sharedBufferSize)
+                {
+                    pthread_cond_wait(&sharedBufferNotFull, &sharedBufferLock);
+                }
+
+                sharedBuffer[bufferCounter] = "__XX__";
+                bufferCounter++;
+                pthread_cond_signal(&sharedBufferNotEmpty);
+                pthread_mutex_unlock(&sharedBufferLock);
+            }
+            break;
+        }
+    }
+
+    int taskPool[workerThreads];
+
+    for(randomIntegerOne = 0; randomIntegerOne < workerThreads; randomIntegerOne++)
+    {
+        pthread_join(pointerToThreads[randomIntegerOne], (void**) &taskPool[randomIntegerOne]);
+    }
+
+    for(randomIntegerOne = 0; randomIntegerOne < workerThreads; randomIntegerOne++)
+    {
+        printf("Worker thread %d has terminated and completed %d tasks,\n", randomIntegerOne, taskPool[randomIntegerOne]);
+    }
+
+    for(randomIntegerOne = 0; randomIntegerOne < lineCounter; randomIntegerOne++)
+    {
+        printf("%s: %d\n", pointerforResults[randomIntegerOne].currentWord, pointerforResults[randomIntegerOne].counter);
+    }
+
+    //destorying condtion variables and mutex locks
+
+    pthread_mutex_destroy(&sharedBufferLock);
+    pthread_mutex_destroy(&resultsPoolLock);
+    pthread_cond_destroy(&sharedBufferNotEmpty);
+    pthread_cond_destroy(&sharedBufferNotFull);
+    free(sharedBuffer);
+    free(pointerToThreads);
+    fclose(fp);
+    free(filename);
+    free(pointerforResults);
+    return 0;
 }
