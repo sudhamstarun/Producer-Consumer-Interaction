@@ -8,32 +8,24 @@ Execution: ./thrwordcnt [number of workers] [number of buffers] [target plaintex
 Remarks: 
 */
 
-/*
-REDUCERS THREADS- Number of worker threads
-MAPPER THREADS - Will always be 1 in our case as we do not need multiple mapper threads (Need to figure a way to always keep the mapper threads to 1 or see if it is different?)
-This means that Mapper Pool will be of the same size as the reducer pool
-Number of Buffers or Pool Size will remain the same as from the input argument
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <pthread.h>
 #include <ctype.h>
-#include <stdbool.h>
-#include <assert.h>
-#include <time.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <errno.h>
+#include <pthread.h>
+#include <stdbool.h>
 
 #define MAXIMUM_SIZE 200
-
 
 /*
 ***DECLARING DATA STRUCTURES REQUIRED FOR OUR PROGRAM *** 
 */
 
-typedef struct printResults //rddata
+typedef struct printResults 
 {
     unsigned int counter; // counter of the keyword
     char currentWord[MAXIMUM_SIZE]; // storing the keyword in concern
@@ -63,9 +55,7 @@ void * workerThreadExecution(void * arg);
 
 char *filename; // store the name of the keyword file
 char ** sharedBuffer;
-struct printResults  * pointerIntermediatry;
 struct printResults * pointerforResults;
-bool flagForTermination;
 int resultCounter = 0;
 int lineCounter;
 char temporaryKeyWordStorage[MAXIMUM_SIZE];
@@ -75,10 +65,10 @@ int sharedBufferSize;
 int workerThreads;
 
 //Condition variables and mutex locks declared below
-pthread_mutex_t sharedBufferLock;
-pthread_mutex_t resultsPoolLock;
-pthread_cond_t sharedBufferNotFull;
-pthread_cond_t sharedBufferNotEmpty;
+pthread_mutex_t sharedBufferLock; //buffer mutex lock
+pthread_mutex_t resultsPoolLock; //result pool mutex lock
+pthread_cond_t sharedBufferNotFull; // buffer not full condition variable
+pthread_cond_t sharedBufferNotEmpty; // buffer not empty condition variable
 pthread_t *pointerToThreads;
 
 /*
@@ -132,7 +122,6 @@ unsigned int keyWordSearch(char *keyword)
 
     convertToLowerCase(word); // convert the word to lowercase
     f = fopen(filename, "r"); // open the file stream
-
     while(fscanf(f, "%s", input) != EOF) //if not EOF
     {
         convertToLowerCase(input); // change the input to lower case
@@ -168,6 +157,8 @@ unsigned int keyWordSearch(char *keyword)
     fclose(f);
     free(word);
 
+    printf("Counter succesfully done: %d", counter);
+
     return counter;
 }
 
@@ -200,15 +191,15 @@ void * workerThreadExecution(void *arg)
 
         sharedBuffer[bufferCounter] = NULL;
         printf("Worker(%d) : Search for keyword '%s'\n", (int)arg, temporaryKeyWordStorage);
-        pointerforResults[resultCounter].counter = keyWordSearch(temporaryKeyWordStorage);
+        pointerforResults[resultCounter].counter = keyWordSearch(temporaryKeyWordStorage); // check this as well
         strcpy(pointerforResults[resultCounter].currentWord, temporaryKeyWordStorage);
         resultCounter++;
         pthread_cond_signal(&sharedBufferNotFull);
-        pthread_mutex_lock(&sharedBufferLock);
+        pthread_mutex_unlock(&sharedBufferLock);
         tasksCompletedCounter++;
     }
 
-    pthread_exit((void*)tasksCompletedCounter);
+    pthread_exit((void*)(uintptr_t)tasksCompletedCounter);
 }
 
 int main(int argc, char* argv[])
@@ -220,12 +211,8 @@ int main(int argc, char* argv[])
 
     FILE *fp;
     int randomIntegerOne;
-    int randomIntegerTwo; //pt
-    int randomIntegerNum;
-    char storeWord[MAXIMUM_SIZE];
     char temporaryKeyWord[MAXIMUM_SIZE];
     struct printResults * finalResults;
-    flagForTermination = false;
 
     pthread_mutex_init(&sharedBufferLock, NULL);
     pthread_mutex_init(&resultsPoolLock, NULL);
@@ -275,7 +262,6 @@ int main(int argc, char* argv[])
        
     fp = fopen(argv[4], "r");
     fscanf(fp, "%d", &lineCounter);
-    int randomArray[lineCounter];
     pointerforResults = (struct printResults *) malloc (lineCounter * sizeof(struct printResults)); // array to maintain the final results
     sharedBuffer = malloc(lineCounter * sizeof(char*));
 
@@ -309,8 +295,11 @@ int main(int argc, char* argv[])
 
     while(wordCounter < lineCounter)
     {
+        printf("The value of wordCounter is : %d\n", wordCounter);
+        printf("The value of linecounter is : %d\n", lineCounter);
         fscanf(fp, "%s", temporaryKeyWord);
         pthread_mutex_lock(&sharedBufferLock);
+        printf("lol0.75\n");
 
         printf("Scanning done\n");
 
@@ -322,11 +311,17 @@ int main(int argc, char* argv[])
         printf("lol1\n");
 
         sharedBuffer[bufferCounter] = strdup(temporaryKeyWord);
+        printf("lol2\n");
         wordCounter++;
+        printf("lol3\n");
         bufferCounter++;
+        printf("lol4\n");
         pthread_cond_signal(&sharedBufferNotEmpty);
+        printf("lol5\n");
         pthread_mutex_unlock(&sharedBufferLock);
+        printf("lol6\n");
     }
+
 
     printf("while loop exited!\n");
 
