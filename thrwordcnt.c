@@ -178,7 +178,7 @@ void * workerThreadExecution(void *arg)
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-    while(1)
+    while(true)
     {
         printf("Worker(%d) : Start up. Wait for task!\n", (int) arg);
         pthread_mutex_lock(&sharedBufferLock);
@@ -208,7 +208,7 @@ void * workerThreadExecution(void *arg)
         tasksCompletedCounter++;
     }
 
-    pthread_exit((void*) (uintptr_t)tasksCompletedCounter);
+    pthread_exit((void*)tasksCompletedCounter);
 }
 
 int main(int argc, char* argv[])
@@ -236,6 +236,10 @@ int main(int argc, char* argv[])
     ************************************************************
     */
 
+    workerThreads = (int) strtol (argv[1], (char**)NULL, 10);
+    sharedBufferSize = (int) strtol (argv[2], (char**)NULL, 10);
+    filename = strdup(argv[3]);
+
     /*
     *** START OF HANDLING COMMANDLINE ARGUMENT ERRORS ***
     */
@@ -258,6 +262,8 @@ int main(int argc, char* argv[])
         exit(EXIT_FAILURE);
     }
 
+    printf("Input Seems to be fine!\n");
+
     /*
     ************************************************************
     */
@@ -273,17 +279,23 @@ int main(int argc, char* argv[])
     pointerforResults = (struct printResults *) malloc (lineCounter * sizeof(struct printResults)); // array to maintain the final results
     sharedBuffer = malloc(lineCounter * sizeof(char*));
 
+    printf("File opening and scanning done.\n");
+
     // initialize the sharedBuffer array
     for(randomIntegerOne = 0; randomIntegerOne < sharedBufferSize; randomIntegerOne++)
     {
         sharedBuffer[randomIntegerOne] = malloc((MAXIMUM_SIZE) * sizeof(char *));
     }
 
+    printf("Initialize sharedBuffer Array done.\n");
+
     //setting all the values in sharedBuffer to NULL
     for(randomIntegerOne = 0; randomIntegerOne < sharedBufferSize; randomIntegerOne++)
     {
         sharedBuffer[randomIntegerOne] = NULL;
     }
+
+    printf("Akk the values in sharedBuffer set to null.\n");
 
     //initialize thread array
     pointerToThreads = malloc((MAXIMUM_SIZE)*sizeof(char*));
@@ -293,15 +305,21 @@ int main(int argc, char* argv[])
         pthread_create(&pointerToThreads[randomIntegerOne], NULL, workerThreadExecution, (void*) (uintptr_t) randomIntegerOne);
     }
 
+    printf("Initialized thread array.\n");
+
     while(wordCounter < lineCounter)
     {
         fscanf(fp, "%s", temporaryKeyWord);
         pthread_mutex_lock(&sharedBufferLock);
 
+        printf("Scanning done\n");
+
         while(bufferCounter == sharedBufferSize)
         {
             pthread_cond_wait(&sharedBufferNotFull, &sharedBufferLock);
         }
+
+        printf("lol1\n");
 
         sharedBuffer[bufferCounter] = strdup(temporaryKeyWord);
         wordCounter++;
@@ -310,7 +328,9 @@ int main(int argc, char* argv[])
         pthread_mutex_unlock(&sharedBufferLock);
     }
 
-    while(1)
+    printf("while loop exited!\n");
+
+    while(true)
     {
         if(checkIfSharedBufferEmpty() == true)
         {
