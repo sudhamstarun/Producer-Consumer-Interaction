@@ -3,7 +3,7 @@ FileName: thrwordcnt.c
 Student Name: Tarun Sudhams
 Student Number: 3035253876
 Development Platform: MACOSX 10.14 with gcc compiler and Visual Studio Code(tested on Ubuntu 16.04) 
-Compilation: gcc thrwordcnt.c -o thrwordcnt (Fix this later)
+Compilation: gcc -pthread thrwordcnt.c -o thrwordcnt (Ubuntu 16.04)
 Execution: ./thrwordcnt [number of workers] [number of buffers] [target plaintext file] [keyword file]
 Remarks: 
 */
@@ -13,6 +13,7 @@ Remarks:
 #include <string.h>
 #include <ctype.h>
 #include <unistd.h>
+#include <stdint.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <errno.h>
@@ -171,7 +172,7 @@ void * workerThreadExecution(void *arg)
 
     while(true)
     {
-        printf("Worker(%d) : Start up. Wait for task!\n", (int) arg);
+        printf("Worker(%d) : Start up. Wait for task!\n", (__intptr_t) arg);
         pthread_mutex_lock(&sharedBufferLock);
 
         while(bufferCounter == 0)
@@ -293,7 +294,7 @@ int main(int argc, char* argv[])
 
     printf("Initialized thread array.\n");
 
-    while(wordCounter < lineCounter)
+    while(wordCounter < lineCounter) 
     {
         printf("The value of wordCounter is : %d\n", wordCounter);
         printf("The value of linecounter is : %d\n", lineCounter);
