@@ -20,7 +20,7 @@ Remarks:
 #include <pthread.h>
 #include <stdbool.h>
 
-#define MAXIMUM_SIZE 200
+#define MAXIMUM_SIZE 116
 
 /*
 ***DECLARING DATA STRUCTURES REQUIRED FOR OUR PROGRAM *** 
@@ -165,14 +165,13 @@ unsigned int keyWordSearch(char *keyword)
 
 void * workerThreadExecution(void *arg)
 {
-    char charArrayForCheck[MAXIMUM_SIZE]; 
     int tasksCompletedCounter = 0; // total number of tasks completed the thread has completed
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
     while(true)
     {
-        printf("Worker(%d) : Start up. Wait for task!\n", (__intptr_t) arg);
+        printf("Worker(%d) : Start up. Wait for task!\n", (int)arg);
         pthread_mutex_lock(&sharedBufferLock);
 
         while(bufferCounter == 0)
@@ -213,7 +212,6 @@ int main(int argc, char* argv[])
     FILE *fp;
     int randomIntegerOne;
     char temporaryKeyWord[MAXIMUM_SIZE];
-    struct printResults * finalResults;
 
     pthread_mutex_init(&sharedBufferLock, NULL);
     pthread_mutex_init(&resultsPoolLock, NULL);
@@ -232,19 +230,19 @@ int main(int argc, char* argv[])
     *** START OF HANDLING COMMANDLINE ARGUMENT ERRORS ***
     */
 
-    if(argc != 5)
+    if(argc < 5)
     {
         fprintf(stderr, "Usage: ./thrwordcnt [number of workers] [number of buffers] [target plaintext file] [keyword file]\nz");
         exit(EXIT_FAILURE);
     }
 
-    if(atoi(argv[1]) < 1 || atoi(argv[1]) > 15)
+    if(workerThreads < 1 || workerThreads > 15)
     {
         fprintf(stderr, "The number of worker threads must be between 1 to 15\n");
         exit(EXIT_FAILURE);
     }
 
-    if(atoi(argv[2]) < 1 || atoi(argv[2]) > 10)
+    if(sharedBufferSize < 1 || sharedBufferSize > 10)
     {
         fprintf(stderr, "The number of buffers in task pool must be between 1 to 10");
         exit(EXIT_FAILURE);
@@ -285,9 +283,9 @@ int main(int argc, char* argv[])
     printf("Akk the values in sharedBuffer set to null.\n");
 
     //initialize thread array
-    pointerToThreads = malloc((MAXIMUM_SIZE)*sizeof(char*));
+    pointerToThreads = malloc(workerThreads * sizeof(pthread_t));
 
-    for(randomIntegerOne = 0; randomIntegerOne < sharedBufferSize; randomIntegerOne++)
+    for(randomIntegerOne = 0; randomIntegerOne < workerThreads; randomIntegerOne++)
     {
         pthread_create(&pointerToThreads[randomIntegerOne], NULL, workerThreadExecution, (void*) (uintptr_t) randomIntegerOne);
     }
