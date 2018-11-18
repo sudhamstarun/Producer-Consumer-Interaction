@@ -20,7 +20,7 @@ Remarks:
 #include <pthread.h>
 #include <stdbool.h>
 
-#define MAXIMUM_SIZE 116
+#define MAXIMUM_SIZE 200
 
 /*
 ***DECLARING DATA STRUCTURES REQUIRED FOR OUR PROGRAM *** 
@@ -142,13 +142,13 @@ unsigned int keyWordSearch(char *keyword)
                     continue;
                 }
                 //if the character after keyword in this input string
-				//is an alphabet, skip the checking
+                //is an alphabet, skip the checking
                 if(((pos - input+strlen(word) < strlen(input))) && (isalpha(*(pos+strlen(word)))))
                 {
                     continue;
                 }
                 //Well, we count this keyword as the characters before 
-				//and after the keyword in this input string are non-alphabets
+                //and after the keyword in this input string are non-alphabets
                 counter++;
             }
 
@@ -169,7 +169,7 @@ void * workerThreadExecution(void *arg)
 
     while(true)
     {
-        printf("Worker(%d) : Start up. Wait for task!\n", (int)arg);
+        printf("Worker(%d) : Start up. Wait for task!\n", (int) arg);
         pthread_mutex_lock(&sharedBufferLock);
 
         while(bufferCounter == 0)
