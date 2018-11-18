@@ -158,8 +158,6 @@ unsigned int keyWordSearch(char *keyword)
     fclose(f);
     free(word);
 
-    printf("Counter succesfully done: %d", counter);
-
     return counter;
 }
 
@@ -248,8 +246,6 @@ int main(int argc, char* argv[])
         exit(EXIT_FAILURE);
     }
 
-    printf("Input Seems to be fine!\n");
-
     /*
     ************************************************************
     */
@@ -264,15 +260,12 @@ int main(int argc, char* argv[])
     pointerforResults = (struct printResults *) malloc (lineCounter * sizeof(struct printResults)); // array to maintain the final results
     sharedBuffer = malloc(lineCounter * sizeof(char*));
 
-    printf("File opening and scanning done.\n");
-
     // initialize the sharedBuffer array
     for(randomIntegerOne = 0; randomIntegerOne < sharedBufferSize; randomIntegerOne++)
     {
         sharedBuffer[randomIntegerOne] = malloc((MAXIMUM_SIZE) * sizeof(char *));
     }
 
-    printf("Initialize sharedBuffer Array done.\n");
 
     //setting all the values in sharedBuffer to NULL
     for(randomIntegerOne = 0; randomIntegerOne < sharedBufferSize; randomIntegerOne++)
@@ -280,7 +273,6 @@ int main(int argc, char* argv[])
         sharedBuffer[randomIntegerOne] = NULL;
     }
 
-    printf("Akk the values in sharedBuffer set to null.\n");
 
     //initialize thread array
     pointerToThreads = malloc(workerThreads * sizeof(pthread_t));
@@ -290,39 +282,23 @@ int main(int argc, char* argv[])
         pthread_create(&pointerToThreads[randomIntegerOne], NULL, workerThreadExecution, (void*) (uintptr_t) randomIntegerOne);
     }
 
-    printf("Initialized thread array.\n");
 
     while(wordCounter < lineCounter) 
     {
-        printf("The value of wordCounter is : %d\n", wordCounter);
-        printf("The value of linecounter is : %d\n", lineCounter);
         fscanf(fp, "%s", temporaryKeyWord);
         pthread_mutex_lock(&sharedBufferLock);
-        printf("lol0.75\n");
-
-        printf("Scanning done\n");
 
         while(bufferCounter == sharedBufferSize)
         {
             pthread_cond_wait(&sharedBufferNotFull, &sharedBufferLock);
         }
 
-        printf("lol1\n");
-
         sharedBuffer[bufferCounter] = strdup(temporaryKeyWord);
-        printf("lol2\n");
         wordCounter++;
-        printf("lol3\n");
         bufferCounter++;
-        printf("lol4\n");
         pthread_cond_signal(&sharedBufferNotEmpty);
-        printf("lol5\n");
         pthread_mutex_unlock(&sharedBufferLock);
-        printf("lol6\n");
     }
-
-
-    printf("while loop exited!\n");
 
     while(true)
     {
@@ -355,7 +331,7 @@ int main(int argc, char* argv[])
 
     for(randomIntegerOne = 0; randomIntegerOne < workerThreads; randomIntegerOne++)
     {
-        printf("Worker thread %d has terminated and completed %d tasks,\n", randomIntegerOne, taskPool[randomIntegerOne]);
+        printf("Worker thread %d has terminated and completed %d tasks.\n", randomIntegerOne, taskPool[randomIntegerOne]);
     }
 
     for(randomIntegerOne = 0; randomIntegerOne < lineCounter; randomIntegerOne++)
