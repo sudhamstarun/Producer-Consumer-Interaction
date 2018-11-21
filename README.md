@@ -22,7 +22,7 @@ To have better control on the output, we would like to ask all worker threads no
 First, compile the c file with the following command: 
 
 ```bash
-gcc thrwordcnt.c -o thrwordcnt
+gcc -pthread thrwordcnt.c -o thrwordcnt
 ```
 Then run the executable with the following arguments:
 ```bash
