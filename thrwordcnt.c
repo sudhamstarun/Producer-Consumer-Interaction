@@ -176,7 +176,7 @@ void * workerThreadExecution(void *arg)
     //following the same logic for producer as mentioned in the assignment description
     while(true) 
     {
-        printf("Worker(%d) : Start up. Wait for task!\n", (int) arg);
+        printf("Worker(%li) : Start up. Wait for task!\n", (uintptr_t) arg);
         pthread_mutex_lock(&sharedBufferLock);
 
         while(bufferCounter == 0)
@@ -195,7 +195,7 @@ void * workerThreadExecution(void *arg)
         }
 
         sharedBuffer[bufferCounter] = NULL;
-        printf("Worker(%d) : Search for keyword '%s'\n", (int) arg, temporaryKeyWordStorage);
+        printf("Worker(%li) : Search for keyword '%s'\n", (uintptr_t) arg, temporaryKeyWordStorage);
         pointerforResults[resultCounter].counter = keyWordSearch(temporaryKeyWordStorage); 
         strcpy(pointerforResults[resultCounter].currentWord, temporaryKeyWordStorage);
         resultCounter++;
