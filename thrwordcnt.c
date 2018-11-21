@@ -9,16 +9,16 @@ Remarks:
 */
 
 #include <stdio.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <errno.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <sys/types.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <unistd.h>
-#include <stdint.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <errno.h>
 #include <pthread.h>
-#include <stdbool.h>
 
 #define MAXIMUM_SIZE 200
 
@@ -58,9 +58,9 @@ char *filename; // store the name of the keyword file
 char ** sharedBuffer; // the buffer to store words to searched
 struct printResults * pointerforResults;
 int resultCounter = 0; 
-int lineCounter;
+int lineCounter; // for counting lines while working with test file
 char temporaryKeyWordStorage[MAXIMUM_SIZE]; // temporary storage for the keyword
-int bufferCounter = 0; //
+int bufferCounter = 0; //counter for buffer operations
 int wordCounter = 0;
 int sharedBufferSize; // defines the size of the 
 int workerThreads; // number of work threads used in the program
@@ -173,7 +173,8 @@ void * workerThreadExecution(void *arg)
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL); // 
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-    while(true)
+    //following the same logic for producer as mentioned in the assignment description
+    while(true) 
     {
         printf("Worker(%d) : Start up. Wait for task!\n", (int) arg);
         pthread_mutex_lock(&sharedBufferLock);
@@ -283,12 +284,13 @@ int main(int argc, char* argv[])
     //initialize thread array
     pointerToThreads = malloc(workerThreads * sizeof(pthread_t));
 
+    //create threads
     for(randomIntegerOne = 0; randomIntegerOne < workerThreads; randomIntegerOne++)
     {
         pthread_create(&pointerToThreads[randomIntegerOne], NULL, workerThreadExecution, (void*) (uintptr_t) randomIntegerOne);
     }
 
-
+    //following the same logic for consumer as mentioned in the assignment description
     while(wordCounter < lineCounter) 
     {
         fscanf(fp, "%s", temporaryKeyWord);
@@ -306,6 +308,7 @@ int main(int argc, char* argv[])
         pthread_mutex_unlock(&sharedBufferLock);
     }
 
+    //following the same logic to terminate the threads running after finishing the tasks
     while(true)
     {
         if(checkIfSharedBufferEmpty() == true)
@@ -328,13 +331,18 @@ int main(int argc, char* argv[])
         }
     }
 
-    int taskPool[workerThreads];
+    int taskPool[workerThreads]; // array to store number of tasks conducted by each thread
 
+    //waits for the threads to terminate and collect the number of tasks they finished
     for(randomIntegerOne = 0; randomIntegerOne < workerThreads; randomIntegerOne++)
     {
         pthread_join(pointerToThreads[randomIntegerOne], (void**) &taskPool[randomIntegerOne]);
     }
 
+    /*
+    *** PRINTING OUTPUT RESULTS AS REQUESTED BY THE ASSIGNMENT DESCRIPTION ***
+
+    */
     for(randomIntegerOne = 0; randomIntegerOne < workerThreads; randomIntegerOne++)
     {
         printf("Worker thread %d has terminated and completed %d tasks.\n", randomIntegerOne, taskPool[randomIntegerOne]);
@@ -344,6 +352,10 @@ int main(int argc, char* argv[])
     {
         printf("%s: %d\n", pointerforResults[randomIntegerOne].currentWord, pointerforResults[randomIntegerOne].counter);
     }
+
+    /*
+    ************************************************************
+    */
 
     //destorying condtion variables and mutex locks
 
