@@ -170,7 +170,7 @@ unsigned int keyWordSearch(char *keyword)
 void * workerThreadExecution(void *arg)
 {
     int tasksCompletedCounter = 0; // total number of tasks completed the thread has completed
-    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL); // 
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
     while(true)
