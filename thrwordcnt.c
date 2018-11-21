@@ -20,7 +20,7 @@ Remarks:
 #include <ctype.h>
 #include <pthread.h>
 
-#define MAXIMUM_SIZE 200
+#define MAXIMUM_SIZE 116
 
 /*
 ***DECLARING DATA STRUCTURES REQUIRED FOR OUR PROGRAM *** 
@@ -195,7 +195,7 @@ void * workerThreadExecution(void *arg)
         }
 
         sharedBuffer[bufferCounter] = NULL;
-        printf("Worker(%d) : Search for keyword '%s'\n", (int)arg, temporaryKeyWordStorage);
+        printf("Worker(%d) : Search for keyword '%s'\n", (int) arg, temporaryKeyWordStorage);
         pointerforResults[resultCounter].counter = keyWordSearch(temporaryKeyWordStorage); 
         strcpy(pointerforResults[resultCounter].currentWord, temporaryKeyWordStorage);
         resultCounter++;
@@ -265,7 +265,7 @@ int main(int argc, char* argv[])
     fp = fopen(argv[4], "r");
     fscanf(fp, "%d", &lineCounter);
     pointerforResults = (struct printResults *) malloc (lineCounter * sizeof(struct printResults)); // array to maintain the final results
-    sharedBuffer = malloc(lineCounter * sizeof(char*));
+    sharedBuffer = malloc(8*lineCounter * sizeof(char*));
 
     // initialize the sharedBuffer array
     for(randomIntegerOne = 0; randomIntegerOne < sharedBufferSize; randomIntegerOne++)
