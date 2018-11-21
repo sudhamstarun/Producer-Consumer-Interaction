@@ -40,10 +40,10 @@ typedef struct printResults
 ***LIST OF FUNCTIONS BEING USED IN THE PROGRAM*** 
 */
 
-bool checkIfSharedBufferEmpty();
-char * convertToLowerCase(char * input);
-unsigned int keyWordSearch(char * keyword);
-void * workerThreadExecution(void * arg);
+bool checkIfSharedBufferEmpty(); //checks if the buffer is empty
+char * convertToLowerCase(char * input); // converts a given input char * into all lower case char * 
+unsigned int keyWordSearch(char * keyword); //implements 
+void * workerThreadExecution(void * arg); //implements the workerThread Logic
 
 /*
 ************************************************************
@@ -55,15 +55,15 @@ void * workerThreadExecution(void * arg);
 */
 
 char *filename; // store the name of the keyword file
-char ** sharedBuffer;
+char ** sharedBuffer; // the buffer to store words to searched
 struct printResults * pointerforResults;
-int resultCounter = 0;
+int resultCounter = 0; 
 int lineCounter;
-char temporaryKeyWordStorage[MAXIMUM_SIZE];
-int bufferCounter = 0;
+char temporaryKeyWordStorage[MAXIMUM_SIZE]; // temporary storage for the keyword
+int bufferCounter = 0; //
 int wordCounter = 0;
-int sharedBufferSize;
-int workerThreads;
+int sharedBufferSize; // defines the size of the 
+int workerThreads; // number of work threads used in the program
 
 //Condition variables and mutex locks declared below
 pthread_mutex_t sharedBufferLock; //buffer mutex lock
@@ -94,6 +94,12 @@ bool checkIfSharedBufferEmpty()
 
     return true;
 }
+
+
+/*
+************************************************************
+*/
+
 
 // ADAPTED FROM wordcnt.c file provided with the assignment question
 //pre: input is a C string to be converted to lower case
@@ -189,7 +195,7 @@ void * workerThreadExecution(void *arg)
 
         sharedBuffer[bufferCounter] = NULL;
         printf("Worker(%d) : Search for keyword '%s'\n", (int)arg, temporaryKeyWordStorage);
-        pointerforResults[resultCounter].counter = keyWordSearch(temporaryKeyWordStorage); // check this as well
+        pointerforResults[resultCounter].counter = keyWordSearch(temporaryKeyWordStorage); 
         strcpy(pointerforResults[resultCounter].currentWord, temporaryKeyWordStorage);
         resultCounter++;
         pthread_cond_signal(&sharedBufferNotFull);
