@@ -1,0 +1,17 @@
+16
+pthread
+thread
+process
+create
+attr
+error
+new
+stack
+size
+exit
+dummy
+garbage
+compile
+joined
+returned
+signal
